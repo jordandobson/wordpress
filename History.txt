@@ -1,0 +1,12 @@
+=== 1.0.1 / 2009-06-05
+
+* 1 major enhancement
+
+  * Added the ability to post and check account properties
+
+=== 1.0.0 / 2009-05-28
+
+* 1 major enhancement
+
+  * Birthday!
+
