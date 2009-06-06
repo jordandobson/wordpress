@@ -3,7 +3,7 @@ require 'mechanize'
 
 module Wordpress
 
-  VERSION = '0.1.1'
+  VERSION = '0.1.2'
 
   class AuthError < StandardError; end
   class PostError < StandardError; end
@@ -29,8 +29,8 @@ module Wordpress
       @username  = usr
       @password  = pwd
       @login_url = login_url
-      @agent     = nil
-      @post_url  = nil
+      
+      @agent = @post_url = @tags = @title = @body = nil
     end
     
     def tags= ary
