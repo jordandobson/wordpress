@@ -1,15 +1,14 @@
 require "test/unit"
 require "wordpress"
-# 
 
 ######
 # USED TO TEST PRIVATE METHODS
 class Class
   def private_methods
     m = self.private_instance_methods
-    self.class_eval { public(*m) }
+    self.class_eval { public( *m ) }
     yield
-    self.class_eval { private(*m) }
+    self.class_eval { private( *m ) }
   end
 end
 
@@ -26,6 +25,15 @@ class TestWordpress < Test::Unit::TestCase
 
     @admin_pg = Nokogiri::HTML( Nokogiri::HTML::Builder.new { html { body( :class => 'wp-admin') } }.to_html )
     @login_pg = Nokogiri::HTML( Nokogiri::HTML::Builder.new { html { body( :class => 'login'   ) } }.to_html )
+    
+    #make sure this is used twice
+    @success_html = Nokogiri::HTML( Nokogiri::HTML::Builder.new { div.message { p_ {
+        a( :href => 'http://success.com/2009/?preview=1' )
+        a( :href => 'http://success.com/wp-admin/post.php?post=99' )
+      } } }.to_html )
+
+    #make sure this is used twice
+    @fail_html  = Nokogiri::HTML( Nokogiri::HTML::Builder.new { div.message { p_ } }.to_html )
   end
   
   def test_sets_account_info_on_initialize
@@ -92,6 +100,7 @@ class TestWordpress < Test::Unit::TestCase
     account       = Wordpress::Client.new('nonbreakablespace', 'Password1', 'http://blog.nonbreakablespace.com/wp-login.php')
     assert_equal    true, account.valid_user?
   end
+
   def test_returns_blog_url
     expected      = 'http://blog.nonbreakablespace.com/'
     account       = Wordpress::Client.new('nonbreakablespace', 'Password1', "#{expected}wp-login.php")
@@ -124,10 +133,24 @@ class TestWordpress < Test::Unit::TestCase
     end  
   end
   
-  def test_add_post_adds_post
+  def test_post_response_returns_good_response
+    Wordpress::Client.private_methods {
+      assert_equal "ok", @account.post_response(@success_html)["rsp"]["stat"]
+    }
+  end
+  
+  def test_add_post_returns_ok
+    #stub with success response
     @account.title = Time.now
     @account.body  = "updated next"
-    @account.add_post
+    actual         = @account.add_post
+    assert_equal   "ok", actual["rsp"]["stat"]
+  end
+  
+  def test_add_post_returns_fail
+    Wordpress::Client.private_methods { 
+      assert_equal "fail",  @account.post_response(@fail_html)["rsp"]["stat"]
+    }
   end
 
 end

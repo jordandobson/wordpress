@@ -49,16 +49,17 @@ module Wordpress
     
     def blog_url
       a = dashboard_page.search("#{IS_ADMIN} #wphead h1 a")
-      return a.first['href'] if a.first && a.first['href']
-      nil
+      a.first['href'] if a.first && a.first['href'] ? a.first['href'] : nil
     end
     
     def add_post
       post_form      = dashboard_page.form(POST_FORM)
-      raise PostError, "Missing QuickPress form on users dashboard page." unless  post_form
-      raise PostError, "A post requires a title or body."                 if      !@title && !@body
-      post_form      = build_post(post_form)
-      build_response   @agent.submit(post_form, post_form.buttons.last)
+      raise PostError, "Missing QuickPress form on users dashboard page or invalid account." \
+        unless  post_form
+      raise PostError, "A post requires a title or body." \
+        if      !@title && !@body
+      post_form     = build_post(post_form)
+      post_response   @agent.submit(post_form, post_form.buttons.last)
     end
 
   private
@@ -90,9 +91,15 @@ module Wordpress
       f
     end
     
-    def build_response page
-      return true
-      #get preview url & if it's not there send back error response
+    def post_response page
+      links =  page.search("div.message p a")
+      url = links.first && links.first['href'] ? links.first['href'].gsub("?preview=1", "")   : nil
+      id  = links.first && links.last['href']  ? links.last['href'].sub(/.*post=(\d*)/,'\1') : nil
+      if id && url
+        return { "rsp" => { "post" => { "title" => "#{@title}", "url" => "#{url}", "id" => "#{id}" }, "stat" => "ok" }}
+      end
+        return { "rsp" => { "err" => { "msg" => "Post was unsuccessful.", "title" => "#{@title}" }, "stat" => "fail" }}
+      
     end
 
   end
