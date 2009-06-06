@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'mechanize'
-require 'nokogiri'
 
 module Wordpress
 
