@@ -1,3 +1,9 @@
+=== 1.0.3 / 2009-06-05
+
+* 1 major enhancement
+
+  * Stubbed test and refactored code
+
 === 1.0.1 / 2009-06-05
 
 * 1 major enhancement
