@@ -2,16 +2,13 @@ require "test/unit"
 require "wordpress"
 require "mocha"
 
-######
-# USED TO TEST PRIVATE METHODS
-class Class
-  def private_methods
-    m = self.private_instance_methods
-    self.class_eval { public( *m ) }
-    yield
-    self.class_eval { private( *m ) }
-  end
+class Wordpress::Post
+  public :login_page, :dashboard_page, :logged_into?, :build_post, :post_response
 end
+
+# Need to test these methods
+# * build_post
+# * dashboard_page
 
 class TestWordpress < Test::Unit::TestCase
 
@@ -19,10 +16,10 @@ class TestWordpress < Test::Unit::TestCase
     @u = 'jordandobson'
     @p = 'password'
 
-    @account                    = Wordpress::Client.new @u, @p
-    @account_bad                = Wordpress::Client.new @u, 'x'
-    @account_invalid_login_page = Wordpress::Client.new @u, @p, 'http://notapage.gd/wp-login.php'
-    @account_hosted_account     = Wordpress::Client.new @u, @p, 'http://blog.getglue.net/wp-login.php'
+    @account                    = Wordpress::Post.new @u, @p
+    @account_bad                = Wordpress::Post.new @u, 'x'
+    @account_invalid_login_page = Wordpress::Post.new @u, @p, 'http://notapage.gd/wp-login.php'
+    @account_hosted_account     = Wordpress::Post.new @u, @p, 'http://blog.getglue.net/wp-login.php'
 
     login_html   = '<html><body class="login"><form name="loginform"></form></body></html>'
     admin_html   = '<html><body class="wp-admin"><div id="wphead"><h1><a href="http://getglue.wordpress.com/" title="Visit Site">Get Glue</a></h1></div><form name="post"><input type="text" name="post_title"/><textarea name="content"></textarea><input type="text" name="tags_input"/><input type="submit" name="publish" /></form></body></html>'
@@ -33,7 +30,6 @@ class TestWordpress < Test::Unit::TestCase
     @admin_pg   = setup_mock_mechanize_pg admin_html
     @success_pg = setup_mock_mechanize_pg success_html
     @fail_pg    = setup_mock_mechanize_pg fail_html
-
   end
 
   def setup_mock_mechanize_pg html
@@ -41,36 +37,36 @@ class TestWordpress < Test::Unit::TestCase
   end
 
   def test_sets_account_info_on_initialize
-    actual       = Wordpress::Client.new @u, @p 
+    actual       = Wordpress::Post.new @u, @p 
     assert_equal   [@u, @p], [actual.username, actual.password]
   end
 
   def test_raises_if_username_is_blank
     assert_raise Wordpress::AuthError do
-      Wordpress::Client.new "", @p 
+      Wordpress::Post.new "", @p 
     end
   end
 
   def test_raises_if_password_is_blank
     assert_raise Wordpress::AuthError do
-      Wordpress::Client.new @u, ""
+      Wordpress::Post.new @u, ""
     end
   end
 
   def test_raises_if_password_is_not_srting
     assert_raise Wordpress::AuthError do
-      Wordpress::Client.new @u, 00
+      Wordpress::Post.new @u, 00
     end
   end
 
   def test_raises_if_username_is_not_srting
     assert_raise Wordpress::AuthError do
-      Wordpress::Client.new 00, @p
+      Wordpress::Post.new 00, @p
     end
   end
 
   def test_login_url_uses_default_if_witheld
-    assert_equal Wordpress::Client::DEFAULT_URL, @account.login_url
+    assert_equal Wordpress::Post::DEFAULT_URL, @account.login_url
   end
 
   def test_users_url_does_not_raise
@@ -79,12 +75,12 @@ class TestWordpress < Test::Unit::TestCase
 
   def test_raises_on_bad_login_url
     assert_raise Wordpress::AuthError do
-      Wordpress::Client.new @u, @p, 'http://bad.login/url.php'
+      Wordpress::Post.new @u, @p, 'http://bad.login/url.php'
     end
   end
 
   def test_login_page_is_valid
-    actual = Wordpress::Client.new @u, @p
+    actual = Wordpress::Post.new @u, @p
     actual.stubs(:login_page).returns(@login_pg)
     assert_equal true, actual.valid_login_page?
   end
@@ -110,15 +106,11 @@ class TestWordpress < Test::Unit::TestCase
   end
 
   def test_private_logged_in_is_true
-    Wordpress::Client.private_methods {
-      assert_equal  true,  @account.logged_into?(@admin_pg)
-    }
+    assert_equal  true,  @account.logged_into?(@admin_pg)
   end
 
   def test_private_logged_in_is_false
-    Wordpress::Client.private_methods {
-      assert_equal  false, @account.logged_into?(@login_pg)
-    }
+    assert_equal  false, @account.logged_into?(@login_pg)
   end
 
   def test_returns_blog_url
@@ -131,65 +123,82 @@ class TestWordpress < Test::Unit::TestCase
     assert_nil @account_invalid_login_page.blog_url
   end
 
-  def test_add_post_raises_without_title_or_body
+  def test_update_raises_without_title_or_body
     assert_raise Wordpress::PostError do
-      @account.add_post
+      @account.submit
     end
   end
 
-  def test_add_post_raises_without_post_form
+  def test_update_raises_without_post_form
     @account_bad.stubs(:dashboard_page).returns(@fail_pg)
     @account_bad.title = "Fail"
     assert_raise Wordpress::HostError do
-      @account_bad.add_post
+      @account_bad.submit
+    end
+  end
+
+  def test_tags_are_added_correctly
+    @account.tags = []
+    assert_equal @account.tags, ""
+  end
+
+  def test_tags_single_is_correctly
+    @account.tags = ["Glue"]
+    assert_equal @account.tags, "Glue"
+  end
+
+  def test_tags_multiple_is_correctly_joined
+    @account.tags = ["Glue", "Wordpress", "Ruby on Rails"]
+    assert_equal @account.tags, "Glue, Wordpress, Ruby on Rails"
+  end
+
+  def test_raises_if_tags_not_set_as_array
+    assert_raise Wordpress::TagsError do
+      @account.tags = "hello, "
     end
   end
 
   def test_post_response_returns_good_response
-    Wordpress::Client.private_methods {
-      assert_equal "ok", @account.post_response(@success_pg)["rsp"]["stat"]
-    }
+    assert_equal "ok", @account.post_response(@success_pg)["rsp"]["stat"]
   end
 
-  def test_add_post_returns_fail
-    Wordpress::Client.private_methods {
-      title          = "My Title"
-      @account.title = title
-      res            = @account.post_response(@fail_pg)
-      assert_equal     "fail",                    res["rsp"]["stat"]
-      assert_equal     "Post was unsuccessful.",  res["rsp"]["err"]["msg"]
-      assert_equal     title,                     res["rsp"]["err"]["title"]
-    }
+  def test_update_returns_fail
+    title          = "My Title"
+    @account.title = title
+    res            = @account.post_response(@fail_pg)
+    assert_equal     "fail",                    res["rsp"]["stat"]
+    assert_equal     "Post was unsuccessful.",  res["rsp"]["err"]["msg"]
+    assert_equal     title,                     res["rsp"]["err"]["title"]
   end
 
-  def test_add_post_returns_ok
+  def test_update_returns_ok
     @account.stubs(:dashboard_page).returns(@admin_pg)
     @account.agent.stubs(:submit).returns(@success_pg)
     title          = "My Title"
     @account.title = title
     @account.body  = "Body Text ..."
-    actual         = @account.add_post
+    actual         = @account.submit
     assert_equal     "ok",                        actual["rsp"]["stat"]
     assert_equal     title,                       actual["rsp"]["post"]["title"]
     assert_equal     "99",                        actual["rsp"]["post"]["id"]
     assert_equal     "http://success.com/2009/",  actual["rsp"]["post"]["url"]
   end
 
-  def test_add_post_returns_ok_with_only_title
+  def test_update_returns_ok_with_only_title
     @account.stubs(:dashboard_page).returns(@admin_pg)
     @account.agent.stubs(:submit).returns(@success_pg)
     title          = "My Title"
     @account.title = "My Title"
-    actual         = @account.add_post
+    actual         = @account.submit
     assert_equal     "ok",                        actual["rsp"]["stat"]
     assert_equal     title,                       actual["rsp"]["post"]["title"]
   end
 
-  def test_add_post_returns_ok_with_only_body
+  def test_update_returns_ok_with_only_body
     @account.stubs(:dashboard_page).returns(@admin_pg)
     @account.agent.stubs(:submit).returns(@success_pg)
     @account.body  = "Body Text ..."
-    actual         = @account.add_post
+    actual         = @account.submit
     assert_equal     "ok",                        actual["rsp"]["stat"]
     assert_equal     "",                          actual["rsp"]["post"]["title"]
   end

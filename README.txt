@@ -20,63 +20,62 @@ Posting images with posts, posting only images and pulling down your posts will 
 
 == SYNOPSIS:
 
-1. Instantiate your account
+1. Instantiate your post with your account info
 
-    * You can provide just the username and password
+    * Provide just the username and password as strings
     
-        account = Wordpress::Client.new('username', 'password')
+        user_post = Wordpress::Post.new('username', 'password')
       
-    * Or you can provide the ID as a string or integer
+    * OR Provide the url of your login page if it's self hosted
 
-        account = Wordpress::Client.new('username', 'password', 'http://blog.mysite.com/wp-login.php')
+        user_post = Wordpress::Post.new('username', 'password', 'http://blog.mysite.com/wp-login.php')
 
-2. Get more info about the user's account if you need it
+2. Validate the provided account info and request the users blog url homepage if needed
 
-    * Check if the user is valid
+    * Check if the user is valid. Returns true or false
     
-        account.valid_user?
+        user_post.valid_user?
       
-    * Check if the specified login page is valid
+    * Check if the specified login page is valid. Returns true or false
     
-        account.valid_login_page?
+        user_post.valid_login_page?
       
-    * Get the users blog page url
+    * Get the users blog page url. Returns nil if it can't be found.
     
-        account.blog_url
-      
-    * Get a list of your sites and additional info
-    
-        account.account_info
+        user_post.blog_url
 
 3. Setup your post
 
-    * You must at least include the title or body
+    * You must at least include the title or body. Tags must be an array.
     
-        account.title           = "My Title"
-        account.body            = "My Body Text"
-        account.tags            = ["Glue", "Posterous", "Ruby", "Made By Squad"]
+        user_post.title = "My Title"
+        user_post.body  = "My Body Text"
+        user_post.tags  = ["Glue", "Wordpress", "Ruby", "Made By Squad"]
 
-4. Add your post to Posterous.com
+4. Update your Wordpress Blog with your post
 
     * Set this to a variable to work with the response
     
-        response = account.add_post
+        response = user_post.submit
 
-5. You get a success or error hash back or nil
+5. You get a success or error hash back
 
     * Your response should look something like this if successful
     
-    response #=> { "rsp" => { "post" => { "title"   => "My Title", "url" => "http://getglue.wordpress.com/2009/06/06/my-title/", "id" => "69" },  "stat" => "ok" } }
+        response #=> { "rsp" => { "post" => { "title" => "My Title", "url" => "http://getglue.wordpress.com/2009/06/06/my-title/", "id" => "69" },  "stat" => "ok" } }
     
-    * See the tests for this gem for failure responses and responses for other methods
+    * Your response would look like this if it failed
+    
+        response #=> { "rsp" => { "err" => { "msg" => "Post was unsuccessful.", "title" => "My Title" }, "stat" => "fail" } }
+    
 
 == REQUIREMENTS:
 
-* mechanize, & Mocha (For Tests)
+* mechanize, & Mocha (For Testing)
 
 == INSTALL:
 
-* sudo gem install wordpress -include-dependencies
+* sudo gem install wordpress
 
 == LICENSE:
 

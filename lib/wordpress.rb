@@ -3,13 +3,14 @@ require 'mechanize'
 
 module Wordpress
 
-  VERSION = '0.1.4'
+  VERSION = '0.1.5'
 
   class AuthError < StandardError; end
   class PostError < StandardError; end
   class HostError < StandardError; end
+  class TagsError < StandardError; end
 
-  class Client
+  class Post
 
     DEFAULT_URL = 'http://wordpress.com/wp-login.php'
     LOGIN_FORM  = 'loginform'
@@ -22,7 +23,7 @@ module Wordpress
 
     def initialize usr, pwd, login_url = DEFAULT_URL
       raise   AuthError, "Blank Username or Password or not a string." \
-        if      !usr.is_a?(String) || !pwd.is_a?(String) || usr == '' || pwd == ''
+        unless  usr.is_a?(String) && pwd.is_a?(String) && !usr.empty? && !pwd.empty?
 
       raise   AuthError, "Url should end with wp-login.php" \
         unless  login_url =~ /\/wp-login[.]php$/
@@ -35,7 +36,7 @@ module Wordpress
     end
 
     def tags= ary
-      raise TagError, 'Tags must added using an array' if !ary.is_a?(Array)
+      raise TagsError, 'Tags must added using an array' unless ary.is_a?(Array)
       @tags = ary.join(", ")
     end
 
@@ -48,14 +49,10 @@ module Wordpress
     end
 
     def blog_url
-      begin
-        a = dashboard_page.search("#{IS_ADMIN} #wphead h1 a")
-      rescue SocketError
-      end
-      a && a.first && a.first['href'] ? a.first['href'] : nil
+      dashboard_page.search("#{IS_ADMIN} #wphead h1 a").first['href'] rescue nil
     end
 
-    def add_post
+    def submit
       raise PostError, "A post requires a title or body."                       unless @title || @body
       post_form      = dashboard_page.form(POST_FORM)
       raise HostError, "Missing QuickPress on dashboard page or bad account."   unless post_form
@@ -77,7 +74,6 @@ module Wordpress
         login_form.pwd = @password
         page           = @agent.submit login_form
       end
-      puts page.inspect
       page
     end
 
@@ -85,23 +81,23 @@ module Wordpress
       !page.search(IS_ADMIN).empty?
     end
 
-    def build_post f
-      f.post_title = @title
-      f.content    = @body
-      f.tags_input = @tags
-      f
+    def build_post form
+      form.post_title = @title
+      form.content    = @body
+      form.tags_input = @tags
+      form
     end
 
     def post_response page
-      a = page.search("div.message p a")
-      if a && a.first && a.last
-        url = a.first['href'] ? a.first['href'].gsub("?preview=1", "")  : nil
-        pid = a.last['href']  ? a.last['href'].sub(/.*post=(\d*)/,'\1') : nil
+      links = page.search("div.message p a")
+      if links.first && links.last
+        url = links.first['href'] ? links.first['href'].gsub("?preview=1", "")  : nil
+        pid = links.last['href']  ? links.last['href'].sub(/.*post=(\d*)/,'\1') : nil
         if pid && url
           return { "rsp" => { "post" => { "title" => "#{@title}", "url" => "#{url}", "id" => "#{pid}" }, "stat" => "ok" }}
         end
       end
-      { "rsp" => { "err" => { "msg" => "Post was unsuccessful.", "title" => "#{@title}" }, "stat" => "fail" }}
+      { "rsp" => { "err" => { "msg" => "Post was unsuccessful.", "title" => "#{@title}" }, "stat" => "fail" } }
     end
   end
 end
