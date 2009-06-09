@@ -1,10 +1,10 @@
 = wordpress
 
-* http://github.com/jordandobson/wordpress/tree/master
+* http://JordanDobson.com
 
 == DESCRIPTION:
 
-The Wordpress gem provides posting to a Wordpress.com blog or a self hosted wordpress by providing your username, password, login url(if you host your blog) and your blog content. With this gem, you have access to add a text entry on Wordpress blog by providing these options: title text, body text, and a tag array. You must include at least title text or body text with your post.
+The Wordpress gem provides posting to a Wordpress.com blog or a self hosted wordpress by providing your username, password, login url(if you host your blog) and your blog content. With this gem, you have access to add a text entry on Wordpress blog by providing these options: title text, body text, and a tag array. You must include at least title text or body text for your post.
 
 Posting images with posts, posting only images and pulling down your posts will be available very soon.
 
