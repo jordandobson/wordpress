@@ -24,39 +24,39 @@ Posting images with posts, posting only images and pulling down your posts will 
 
     * Provide just the username and password as strings
     
-        user_post = Wordpress::Post.new('username', 'password')
+        account = Wordpress::Client.new('username', 'password')
       
     * OR Provide the url of your login page if it's self hosted
 
-        user_post = Wordpress::Post.new('username', 'password', 'http://blog.mysite.com/wp-login.php')
+        account = Wordpress::Client.new('username', 'password', 'http://blog.mysite.com/wp-login.php')
 
 2. Validate the provided account info and request the users blog url homepage if needed
 
     * Check if the user is valid. Returns true or false
     
-        user_post.valid_user?
+        account.valid_user?
       
     * Check if the specified login page is valid. Returns true or false
     
-        user_post.valid_login_page?
+        account.valid_login_page?
       
     * Get the users blog page url. Returns nil if it can't be found.
     
-        user_post.blog_url
+        account.blog_url
 
 3. Setup your post
 
     * You must at least include the title or body. Tags must be an array.
     
-        user_post.title = "My Title"
-        user_post.body  = "My Body Text"
-        user_post.tags  = ["Glue", "Wordpress", "Ruby", "Made By Squad"]
+        account.title = "My Title"
+        account.body  = "My Body Text"
+        account.tags  = ["Glue", "Wordpress", "Ruby", "Made By Squad"]
 
-4. Update your Wordpress Blog with your post
+4. Send your post to your Wordpress Blog
 
     * Set this to a variable to work with the response
     
-        response = user_post.submit
+        response = account.post
 
 5. You get a success or error hash back
 
