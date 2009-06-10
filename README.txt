@@ -44,21 +44,19 @@ Posting images with posts, posting only images and pulling down your posts will 
     
         account.blog_url
 
-3. Setup your post
+3. Send your post to your Wordpress Blog
 
-    * You must at least include the title or body. Tags must be an array.
+    * Set to a variable to work with the response
     
-        account.title = "My Title"
-        account.body  = "My Body Text"
-        account.tags  = ["Glue", "Wordpress", "Ruby", "Made By Squad"]
+        response = account.post("My title", "Body Text", ["Glue", "Wordpress"])
+        
+        response = account.post("", "Body Text", ["Glue", "Wordpress"])
+        
+        response = account.post("My title", "")
 
-4. Send your post to your Wordpress Blog
+        response = account.post("", "Body Text")
 
-    * Set this to a variable to work with the response
-    
-        response = account.post
-
-5. You get a success or error hash back
+4. You get a success or error hash back
 
     * Your response should look something like this if successful
     

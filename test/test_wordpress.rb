@@ -6,12 +6,13 @@ class Wordpress::Client
   public :login_page, :dashboard_page, :logged_into?, :build_post, :post_response
 end
 
-# Test these things
+# Should Test The Following
 # * build_post
 # * dashboard_page
 # * Post Response failure
-# * Tags are added as array
+# * Tags error without being an array
 # * Body and tags are returned in response
+# * Testing that username, password & login url respond to empty
 
 class TestWordpress < Test::Unit::TestCase
 
@@ -59,7 +60,7 @@ class TestWordpress < Test::Unit::TestCase
   def test_login_url_uses_default_if_witheld
     assert_equal Wordpress::Client::DEFAULT_URL, @account.login_url
   end
-
+  
   def test_users_url_does_not_raise
     assert_equal 'http://notapage.gd/wp-login.php', @account_invalid_login_page.login_url
   end
@@ -116,14 +117,14 @@ class TestWordpress < Test::Unit::TestCase
 
   def test_post_raises_without_title_or_body
     assert_raise Wordpress::PostError do
-      @account.post
+      @account.post("", "")
     end
   end
 
   def test_post_raises_without_post_form
     @account_bad.stubs(:dashboard_page).returns(@fail_pg)
     assert_raise Wordpress::HostError do
-      @account_bad.post "My Title"
+      @account_bad.post("My Title", "")
     end
   end
 
@@ -143,7 +144,7 @@ class TestWordpress < Test::Unit::TestCase
     @account.stubs(:dashboard_page).returns(@admin_pg)
     @account.agent.stubs(:submit).returns(@success_pg)
     title          = "My Title"
-    body           = "Body Text ..."
+    body           = "Body Text"
     actual         = @account.post(title, body)
     assert_equal     "ok",                        actual["rsp"]["stat"]
     assert_equal     title,                       actual["rsp"]["post"]["title"]
@@ -155,7 +156,7 @@ class TestWordpress < Test::Unit::TestCase
     @account.stubs(:dashboard_page).returns(@admin_pg)
     @account.agent.stubs(:submit).returns(@success_pg)
     title          = "My Title"
-    actual         = @account.post(title)
+    actual         = @account.post(title, "")
     assert_equal     "ok",                        actual["rsp"]["stat"]
     assert_equal     title,                       actual["rsp"]["post"]["title"]
   end
@@ -163,8 +164,8 @@ class TestWordpress < Test::Unit::TestCase
   def test_post_returns_ok_with_only_body
     @account.stubs(:dashboard_page).returns(@admin_pg)
     @account.agent.stubs(:submit).returns(@success_pg)
-    body           = "Body Text ..."
-    actual         = @account.post(nil,body)
+    body           = "Body Text"
+    actual         = @account.post("", body)
     assert_equal     "ok",                        actual["rsp"]["stat"]
     assert_equal     "",                          actual["rsp"]["post"]["title"]
   end

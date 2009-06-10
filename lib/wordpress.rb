@@ -47,8 +47,8 @@ module Wordpress
       dashboard_page.at("#{IS_ADMIN} #wphead h1 a")['href'] rescue nil
     end
 
-    def post title=nil, body=nil, tags=nil
-      raise PostError, "A post requires a title or body."                       unless  title || body
+    def post title, body, tags=nil
+      raise PostError, "A post requires a title or body."                       if  title.empty? && body.empty?
       post_form      = dashboard_page.form(POST_FORM)
       raise HostError, "Missing QuickPress on dashboard page or bad account."   unless  post_form
       tags           = tags.join(", ") if tags
