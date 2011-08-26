@@ -1,3 +1,4 @@
+require 'wordpress/version'
 require 'mechanize'
 
 module Wordpress
@@ -7,7 +8,6 @@ module Wordpress
   class TagsError < StandardError; end
 
   class Client
-
     DEFAULT_URL = 'http://wordpress.com/wp-login.php'
     LOGIN_FORM  = 'loginform'
     POST_FORM   = 'post'
@@ -28,7 +28,7 @@ module Wordpress
       @username  = usr
       @password  = pwd
       @login_url = login_url
-      @agent     = WWW::Mechanize.new
+      @agent     = Mechanize.new
     end
 
     def valid_login_page?

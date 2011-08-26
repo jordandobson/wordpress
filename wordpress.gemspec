@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "wordpress"
   
-  s.add_dependency('mechanize')
+  s.add_dependency('mechanize', '~> 2.0')
   s.add_development_dependency('mocha')
 
   s.files         = `git ls-files`.split("\n")
