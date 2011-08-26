@@ -1,10 +1,6 @@
-require 'rubygems'
 require 'mechanize'
 
 module Wordpress
-
-  VERSION = '0.1.7'
-
   class AuthError < StandardError; end
   class PostError < StandardError; end
   class HostError < StandardError; end
