@@ -81,14 +81,15 @@ module Wordpress
     end
 
     def post_response page, title
-      links = page.search("div#message p a")
+      links = page.search("div.updated p a")
       if links.first
         url = links.first['href']
-        if url
-          return {"rsp" => {"post" => {"title" => "#{title}", "url" => "#{url}"}, "stat" => "ok" }}
+        pid = links.last['href']  ? links.last['href'].sub(/.*post=(\d*)/,'\1') : nil
+        if pid && url
+          return {"rsp" => {"post" => {"title" => "#{title}", "url" => "#{url}", "id" => "#{pid}"}, "stat" => "ok" }}
         end
       end
-      {"rsp" => {"err" => {"msg" => "Post was unsuccessful.", "title" => "#{title}"}, "stat" => "fail"}}
+      {"rsp" => {"err" => {"msg" => "Post was unsuccessful.", "title" => "#{title}", "links" => links.inspect}, "stat" => "fail"}}
     end
   end
 end
