@@ -43,12 +43,14 @@ module Wordpress
       dashboard_page.at("#{IS_ADMIN} #wphead h1 a")['href'] rescue nil
     end
 
-    def post title, body, tags=nil
+    def post title, body, options = {}
+      tags = options.delete(:tags)
+      category = options.delete(:category)
       raise PostError, "A post requires a title or body."                       if  title.empty? && body.empty?
       post_form      = dashboard_page.form(POST_FORM)
       raise HostError, "Missing QuickPress on dashboard page or bad account."   unless  post_form
       tags           = tags.join(", ") if tags
-      post_form      = build_post(post_form, title, body, tags)
+      post_form      = build_post(post_form, title, body, tags, category)
       post_response    @agent.submit(post_form, post_form.buttons.last), title
     end
 
@@ -73,10 +75,14 @@ module Wordpress
       !page.search(IS_ADMIN).empty?
     end
 
-    def build_post form, title, body, tags
+    def build_post form, title, body, tags, category
       form.post_title = title
       form.content    = body
-      form.tags_input = tags
+      form.tags_input = tags if tags
+      if category
+        category_select = form.fields.find { |f| f.name == 'post_category[]' }
+        category_select.value = category_select.options.find { |o| o.text == category }.value
+      end
       form
     end
 
