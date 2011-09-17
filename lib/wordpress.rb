@@ -1,17 +1,13 @@
-require 'rubygems'
+require 'wordpress/version'
 require 'mechanize'
 
 module Wordpress
-
-  VERSION = '0.1.7'
-
   class AuthError < StandardError; end
   class PostError < StandardError; end
   class HostError < StandardError; end
   class TagsError < StandardError; end
 
   class Client
-
     DEFAULT_URL = 'http://wordpress.com/wp-login.php'
     LOGIN_FORM  = 'loginform'
     POST_FORM   = 'post'
@@ -47,12 +43,14 @@ module Wordpress
       dashboard_page.at("#{IS_ADMIN} #wphead h1 a")['href'] rescue nil
     end
 
-    def post title, body, tags=nil
+    def post title, body, options = {}
+      tags = options.delete(:tags)
+      category = options.delete(:category)
       raise PostError, "A post requires a title or body."                       if  title.empty? && body.empty?
       post_form      = dashboard_page.form(POST_FORM)
       raise HostError, "Missing QuickPress on dashboard page or bad account."   unless  post_form
       tags           = tags.join(", ") if tags
-      post_form      = build_post(post_form, title, body, tags)
+      post_form      = build_post(post_form, title, body, tags, category)
       post_response    @agent.submit(post_form, post_form.buttons.last), title
     end
 
@@ -77,23 +75,27 @@ module Wordpress
       !page.search(IS_ADMIN).empty?
     end
 
-    def build_post form, title, body, tags
+    def build_post form, title, body, tags, category
       form.post_title = title
       form.content    = body
-      form.tags_input = tags
+      form.tags_input = tags if tags
+      if category
+        category_select = form.fields.find { |f| f.name == 'post_category[]' }
+        category_select.value = category_select.options.find { |o| o.text == category }.value
+      end
       form
     end
 
     def post_response page, title
-      links = page.search("div.message p a")
-      if links.first && links.last
-        url = links.first['href'] ? links.first['href'].gsub("?preview=1", "")  : nil
+      links = page.search("div.updated p a")
+      if links.first
+        url = links.first['href']
         pid = links.last['href']  ? links.last['href'].sub(/.*post=(\d*)/,'\1') : nil
         if pid && url
           return {"rsp" => {"post" => {"title" => "#{title}", "url" => "#{url}", "id" => "#{pid}"}, "stat" => "ok" }}
         end
       end
-      {"rsp" => {"err" => {"msg" => "Post was unsuccessful.", "title" => "#{title}"}, "stat" => "fail"}}
+      {"rsp" => {"err" => {"msg" => "Post was unsuccessful.", "title" => "#{title}", "links" => links.inspect}, "stat" => "fail"}}
     end
   end
 end
