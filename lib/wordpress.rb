@@ -32,7 +32,7 @@ module Wordpress
       @username  = usr
       @password  = pwd
       @login_url = login_url
-      @agent     = WWW::Mechanize.new
+      @agent     = Mechanize.new
     end
 
     def valid_login_page?
