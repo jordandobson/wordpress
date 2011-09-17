@@ -5,8 +5,8 @@ require "wordpress/version"
 Gem::Specification.new do |s|
   s.name        = "wordpress"
   s.version     = Wordpress::VERSION
-  s.authors     = ["Jordan Dobson"]
-  s.email       = ["jordan.dobson@madebysquad.com"]
+  s.authors     = ["Jordan Robert Dobson"]
+  s.email       = ["jordandobson@gmail.com"]
   s.homepage    = "https://github.com/jordandobson/wordpress"
   s.summary     = %q{The Wordpress gem provides posting to a Wordpress.com blog or a self hosted wordpress by providing your username, password, login url(if you host your blog) and your blog content. With this gem, you have access to add a text entry on Wordpress blog by providing these options: title text, body text, and a tag array. You must include at least title text or body text with your post.}
   s.description = %q{The Wordpress gem provides posting to a Wordpress.com blog or a self hosted wordpress by providing your username, password, login url(if you host your blog) and your blog content.}
