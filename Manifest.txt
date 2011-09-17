@@ -1,7 +1,0 @@
-History.txt
-Manifest.txt
-README.txt
-Rakefile
-bin/wordpress
-lib/wordpress.rb
-test/test_wordpress.rb
