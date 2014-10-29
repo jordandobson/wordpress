@@ -1,4 +1,4 @@
-require 'wordpress/version'
+require_relative 'wordpress/version'
 require 'mechanize'
 
 module Wordpress

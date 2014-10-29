@@ -1,6 +1,9 @@
+p $:
+
 require "test/unit"
-require "wordpress"
-require "mocha"
+require_relative "../lib/wordpress"
+
+require 'mocha/test_unit'
 
 class Wordpress::Client
   public :login_page, :dashboard_page, :logged_into?, :build_post, :post_response
@@ -27,17 +30,17 @@ class TestWordpress < Test::Unit::TestCase
 
     login_html   = '<html><body class="login"><form name="loginform"></form></body></html>'
     admin_html   = '<html><body class="wp-admin"><div id="wphead"><h1><a href="http://getglue.wordpress.com/" title="Visit Site">Get Glue</a></h1></div><form name="post"><input type="text" name="post_title"/><textarea name="content"></textarea><input type="text" name="tags_input"/><input type="submit" name="publish" /></form></body></html>'
-    success_html = '<div class="message"><p><a href="http://success.com/2009/?preview=1">preview</a><a href="http://success.com/wp-admin/post.php?post=99">edit</a></p></div>'
+    success_html = '<div class="updated"><p><a href="http://success.com/2009/">preview</a><a href="http://success.com/wp-admin/post.php?post=99">edit</a></p></div>'
     fail_html    = '<div class="message"><p></p></div>'
 
-    @login_pg   = setup_mock_mechanize_pg login_html
-    @admin_pg   = setup_mock_mechanize_pg admin_html
-    @success_pg = setup_mock_mechanize_pg success_html
-    @fail_pg    = setup_mock_mechanize_pg fail_html
+    @login_pg   = setup_mock_mechanize_pg login_html, @account.agent
+    @admin_pg   = setup_mock_mechanize_pg admin_html, @account.agent
+    @success_pg = setup_mock_mechanize_pg success_html, @account.agent
+    @fail_pg    = setup_mock_mechanize_pg fail_html, @account_bad.agent
   end
 
-  def setup_mock_mechanize_pg html
-    WWW::Mechanize::Page.new(nil, {'content-type' => 'text/html'}, html, 200)
+  def setup_mock_mechanize_pg html, agent
+    Mechanize::Page.new(nil, {'content-type' => 'text/html'}, html, 200, agent)
   end
 
   def test_sets_account_info_on_initialize
